@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:,">
+  <title>PNW Chain Finder</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #e9eef0;
+      --bg-grid: rgba(15, 53, 45, .055);
+      --surface: #ffffff;
+      --surface-raised: #f6f9f8;
+      --ink: #13231f;
+      --muted: #52635e;
+      --line: #cbd7d2;
+      --accent: #087c54;
+      --accent-strong: #05603f;
+      --accent-soft: #d6f6e4;
+      --star: #b06d00;
+      --focus: #00a56f;
+      --shadow: 0 12px 34px rgba(12, 34, 28, .08);
+      --perfect-bg:#d7f8e5; --perfect-fg:#075f3c;
+      --good-bg:#e7f5c8; --good-fg:#4b6512;
+      --decent-bg:#fff0b7; --decent-fg:#755506;
+      --bad-bg:#ffe0c1; --bad-fg:#8d4000;
+      --unplayable-bg:#ffd7d6; --unplayable-fg:#8c1e1a;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #071310;
+        --bg-grid: rgba(133, 239, 188, .042);
+        --surface: #10231e;
+        --surface-raised: #142b24;
+        --ink: #eef8f4;
+        --muted: #a8bbb4;
+        --line: #29453b;
+        --accent: #64e3a2;
+        --accent-strong: #9bf3c5;
+        --accent-soft: #153d2c;
+        --star: #f3c75c;
+        --focus: #81efb8;
+        --shadow: 0 16px 38px rgba(0,0,0,.24);
+        --perfect-bg:#153f2e; --perfect-fg:#91efb8;
+        --good-bg:#344219; --good-fg:#d2ed84;
+        --decent-bg:#4b3d13; --decent-fg:#ffe388;
+        --bad-bg:#522d16; --bad-fg:#ffc17c;
+        --unplayable-bg:#502121; --unplayable-fg:#ffaaa5;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 0;
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(var(--bg-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+      background-size: 28px 28px;
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+    button, input, select { font: inherit; }
+    button, select { cursor: pointer; }
+    a { color: inherit; }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+    .shell { width: min(1500px, 100%); margin: 0 auto; padding: 0 clamp(16px, 3vw, 44px); }
+    .masthead { padding-top: clamp(42px, 7vw, 88px); padding-bottom: 26px; }
+    .title-row { display: flex; gap: 24px; justify-content: space-between; align-items: end; }
+    h1 { margin: 0; font-size: clamp(2.2rem, 5vw, 4.65rem); line-height: .94; letter-spacing: -.055em; font-weight: 820; }
+    .subtitle { margin: 18px 0 0; max-width: 750px; color: var(--muted); font-size: clamp(1rem, 1.8vw, 1.28rem); }
+    .credit { margin: 9px 0 0; color: var(--muted); font-size: .82rem; }
+    .stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 26px 0 0; padding: 0; list-style: none; }
+    .stat { border: 1px solid var(--line); background: var(--surface); color: var(--muted); padding: 7px 11px; border-radius: 999px; font-size: .8rem; font-weight: 720; box-shadow: 0 3px 10px rgba(0,0,0,.035); }
+    .stat strong { color: var(--ink); }
+    .controls-wrap { position: sticky; top: 0; z-index: 10; padding: 10px 0 14px; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+    .controls { display: grid; grid-template-columns: minmax(230px, 2fr) repeat(4, minmax(126px, 1fr)) auto; gap: 10px; align-items: end; }
+    .field { min-width: 0; }
+    .field label { display: block; margin: 0 0 5px 2px; color: var(--muted); font-size: .7rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+    .input, .select, .reset {
+      width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink); padding: 9px 11px;
+    }
+    .input::placeholder { color: var(--muted); opacity: .8; }
+    .input { padding-left: 38px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23788f86' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 12px center; }
+    .reset { width: auto; padding-inline: 17px; color: var(--accent-strong); font-weight: 760; background: var(--accent-soft); border-color: transparent; }
+    .reset:hover { filter: brightness(.97); }
+    .content { padding-top: 24px; padding-bottom: 72px; }
+    .results-line { margin: 0 0 16px; color: var(--muted); font-size: .94rem; }
+    .results-line strong { color: var(--ink); }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .card { position: relative; min-width: 0; min-height: 238px; display: flex; flex-direction: column; padding: 19px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+    .card.top { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
+    .ribbon { position: absolute; right: 0; top: 0; padding: 5px 9px 6px; border-radius: 0 0 0 8px; color: var(--accent-strong); background: var(--accent-soft); font-size: .68rem; font-weight: 850; letter-spacing: .035em; text-transform: uppercase; }
+    .card h3 { margin: 0; padding-right: 0; font-size: 1.06rem; line-height: 1.26; letter-spacing: -.018em; overflow-wrap: anywhere; }
+    .card.top h3 { padding-right: 68px; }
+    .location { display: flex; align-items: center; gap: 8px; min-width: 0; margin-top: 8px; color: var(--muted); font-size: .84rem; }
+    .location-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .state { flex: 0 0 auto; border-radius: 4px; padding: 2px 5px; background: var(--accent-soft); color: var(--accent-strong); font-size: .65rem; font-weight: 900; letter-spacing: .06em; }
+    .rating { margin: 18px 0 0; min-height: 24px; color: var(--ink); font-size: .92rem; font-weight: 730; }
+    .star { color: var(--star); margin-right: 3px; }
+    .unrated { color: var(--muted); font-weight: 620; }
+    .reviews { color: var(--muted); font-weight: 500; }
+    .meta { margin: 6px 0 0; color: var(--muted); font-size: .84rem; }
+    .card-foot { display: flex; gap: 9px; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 18px; }
+    .condition { padding: 5px 8px; border-radius: 6px; font-size: .72rem; line-height: 1; font-weight: 800; white-space: nowrap; }
+    .condition.perfect { background:var(--perfect-bg); color:var(--perfect-fg); }
+    .condition.good { background:var(--good-bg); color:var(--good-fg); }
+    .condition.decent { background:var(--decent-bg); color:var(--decent-fg); }
+    .condition.bad { background:var(--bad-bg); color:var(--bad-fg); }
+    .condition.unplayable { background:var(--unplayable-bg); color:var(--unplayable-fg); }
+    .dgcr { margin-left: auto; padding: 7px 9px; border-radius: 7px; background: var(--surface-raised); border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-size: .76rem; font-weight: 750; white-space: nowrap; }
+    .dgcr:hover { color: var(--accent-strong); border-color: var(--accent); }
+    .empty { grid-column: 1 / -1; padding: clamp(38px, 8vw, 90px) 18px; text-align: center; border: 1px dashed var(--line); border-radius: 12px; background: var(--surface); }
+    .empty p { margin: 0 0 18px; font-size: 1.05rem; font-weight: 700; }
+    .empty button { border: 0; border-radius: 8px; padding: 10px 15px; color: var(--accent-strong); background: var(--accent-soft); font-weight: 780; }
+    footer { border-top: 1px solid var(--line); padding: 25px 0 calc(32px + env(safe-area-inset-bottom)); color: var(--muted); font-size: .79rem; }
+    footer p { max-width: 870px; margin: 0; }
+    @media (max-width: 1180px) { .controls { grid-template-columns: 2fr repeat(2, 1fr); } .reset { width: 100%; } .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 820px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 620px) {
+      .shell { padding-inline: 14px; }
+      .masthead { padding-top: 34px; padding-bottom: 19px; }
+      .subtitle { margin-top: 13px; }
+      .stats { margin-top: 20px; }
+      .controls-wrap { padding-block: 9px 11px; }
+      .controls { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .field-search { grid-column: 1 / -1; }
+      .reset { min-height: 42px; }
+      .grid { grid-template-columns: 1fr; gap: 10px; }
+      .card { min-height: 218px; padding: 17px; }
+      .content { padding-top: 18px; }
+    }
+    @media (max-width: 390px) { .card-foot { align-items: flex-end; } .dgcr { font-size: .72rem; } }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+  <header class="shell masthead">
+    <div class="title-row"><h1>PNW Chain Finder</h1></div>
+    <p class="subtitle">Find your next round — every disc golf course in Oregon &amp; Washington, 420 courses</p>
+    <p class="credit">Course facts from dgcoursereview.com · snapshot Sep 29, 2026</p>
+    <ul class="stats" id="stats" aria-label="Directory statistics"></ul>
+  </header>
+
+  <div class="controls-wrap">
+    <div class="shell controls" role="search" aria-label="Filter courses">
+      <div class="field field-search">
+        <label for="search">Search</label>
+        <input class="input" id="search" type="search" placeholder="Course or city" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="state">State</label>
+        <select class="select" id="state"><option value="">All states</option><option value="OR">Oregon</option><option value="WA">Washington</option></select>
+      </div>
+      <div class="field">
+        <label for="holes">Holes</label>
+        <select class="select" id="holes"><option value="">Any holes</option><option value="9">9</option><option value="18">18</option><option value="21">21+</option></select>
+      </div>
+      <div class="field">
+        <label for="rating">Min rating</label>
+        <select class="select" id="rating"><option value="0">Any rating</option><option value="3">3.0+</option><option value="3.5">3.5+</option><option value="4">4.0+</option><option value="4.5">4.5+</option></select>
+      </div>
+      <div class="field">
+        <label for="sort">Sort</label>
+        <select class="select" id="sort"><option value="reviews">Most reviewed</option><option value="rating">Highest rated</option><option value="holes">Most holes</option><option value="name">Name A–Z</option></select>
+      </div>
+      <button class="reset" id="reset" type="button">Reset</button>
+    </div>
+  </div>
+
+  <main class="shell content">
+    <p class="results-line" id="results" aria-live="polite"></p>
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <footer><div class="shell"><p>Course names, locations, ratings and conditions courtesy of dgcoursereview.com. Full written reviews live on DGCR — use the link on any course to read them. Snapshot: Sep 29, 2026.</p></div></footer>
+
+  <script>
+const OR=[["Pier Park","Portland, OR",4.26,113,18,"5,865 ft","Good","OR"],
+["Riverbend DGC - East","Estacada, OR",4.6,81,18,"5,971 ft","Perfect","OR"],
+["Dexter Park DGC","Dexter, OR",4.29,51,18,"5,579 ft","","OR"],
+["Horning's Hideout - Canyon Course","North Plains, OR",4.09,49,18,"5,085 ft","","OR"],
+["Dabney State Rec. Area","Troutdale, OR",3.76,0,18,"4,953 ft","Decent","OR"],
+["Horning's Hideout - Meadow Ridge","",4.54,0,18,"5,540 ft","","OR"],
+["Timber Park","",3.81,0,21,"5,500 ft","","OR"],
+["Orchard Park","Hillsboro, OR",2.71,0,9,"1,886 ft","","OR"],
+["Adair Park","Adair Village, OR",4.03,0,18,"5,287 ft","","OR"],
+["Willamette Park","Corvallis, OR",3.55,0,18,"5,908 ft","Good","OR"],
+["Greenway DGC","Beaverton, OR",2.7,0,9,"2,274 ft","","OR"],
+["Westmoreland DGC","Eugene, OR",2.44,0,9,"2,469 ft","","OR"],
+["Horning's Hideout - Highland Course","North Plains, OR",0,0,18,"3,077 ft","Perfect","OR"],
+["Blue Lake Regional Park","Fairview, OR",3.68,34,18,"7,833 ft","","OR"],
+["Herbert Hoover Park","Newberg, OR",2.97,0,9,"1,909 ft","","OR"],
+["Vance Park","Gresham, OR",2.76,0,9,"2,500 ft","","OR"],
+["Trojan Park","Rainier, OR",3.27,0,18,"6,145 ft","Good","OR"],
+["Ewing Young","",3.19,0,12,"3,414 ft","","OR"],
+["Cascades Gateway","Salem, OR",3.14,0,18,"5,473 ft","","OR"],
+["Bryant Park","Albany, OR",3.38,26,18,"6,797 ft","","OR"],
+["L.L. Stub Stewart SP - Hares Canyon","Buxton, OR",3.65,0,18,"4,711 ft","Decent","OR"],
+["Rockwood Central Park","",2.52,24,9,"2,145 ft","Perfect","OR"],
+["Hyzer Pines at S.O.A.R.","Sisters, OR",3.48,23,18,"5,185 ft","","OR"],
+["Keizer Rapids Park","Keizer, OR",3.04,0,18,"4,862 ft","","OR"],
+["Tom Pearce Park","Grants Pass, OR",3.8,22,18,"4,332 ft","","OR"],
+["Rooster Rock - East","Corbett, OR",2.73,0,9,"2,127 ft","","OR"],
+["Hood River DGC","Hood River, OR",1.91,0,9,"1,382 ft","","OR"],
+["Dallas City Park","Dallas, OR",3.27,0,18,"4,717 ft","","OR"],
+["North Eco","Canby, OR",2.07,0,12,"3,129 ft","","OR"],
+["Buxton Woods DGC","Buxton, OR",3.84,0,18,"5,120 ft","Perfect","OR"],
+["North Regional Park","Cottage Grove, OR",3.29,0,18,"6,364 ft","Good","OR"],
+["Woodmansee Park","Salem, OR",3.2,0,9,"2,099 ft","","OR"],
+["Champoeg State Park","St. Paul, OR",0,0,18,"6,465 ft","","OR"],
+["Riverfront Park","Roseburg, OR",3.11,19,0,"","Decent","OR"],
+["Rooster Rock - West","Corbett, OR",2.76,0,9,"2,736 ft","","OR"],
+["Corban University","",2.26,0,9,"2,318 ft","Unplayable","OR"],
+["Oregon DGC @ Alton Baker","Eugene, OR",3.39,0,18,"4,349 ft","","OR"],
+["Pine Nursery DGC","Bend, OR",3.42,0,19,"5,407 ft","Perfect","OR"],
+["Wortman Park","McMinnville, OR",3.09,0,12,"3,627 ft","","OR"],
+["Whistler's Bend","",4.31,0,27,"9,475 ft","Good","OR"],
+["Frog Creek DGC @ Shale City","Ashland, OR",3.63,15,18,"5,755 ft","","OR"],
+["Camp Taloali","Stayton, OR",3.7,0,18,"4,356 ft","","OR"],
+["Benson State Park","Corbett, OR",1.71,14,9,"1,584 ft","","OR"],
+["Winsor Park","North Bend, OR",2.57,0,9,"1,905 ft","","OR"],
+["Pendleton Community Park","Pendleton, OR",2.89,0,18,"5,342 ft","","OR"],
+["Memorial Park","Wilsonville, OR",3.0,0,9,"2,045 ft","Good","OR"],
+["Central Oregon Comm. College (Cascade Forest)","",2.65,13,9,"2,000 ft","","OR"],
+["Timber Linn","Albany, OR",1.0,0,9,"2,375 ft","Bad","OR"],
+["Lake Selmac","Selma, OR",3.23,0,18,"4,942 ft","","OR"],
+["Waterloo DGC","Waterloo, OR",3.27,0,18,"5,406 ft","","OR"],
+["McCormick Park","St. Helens, OR",3.69,0,18,"6,180 ft","Decent","OR"],
+["Tualatin Community DGC","Tualatin, OR",2.46,12,15,"2,787 ft","","OR"],
+["Riverside Park","Grants Pass, OR",2.09,11,9,"1,904 ft","","OR"],
+["Camp Tadmor","Lebanon, OR",3.82,0,18,"4,818 ft","","OR"],
+["Mingus Park","Coos Bay, OR",2.64,0,0,"","","OR"],
+["Mt. Bachelor Alpine DGC","Bend, OR",3.73,0,18,"6,840 ft","","OR"],
+["Bandon City Park","",0,0,18,"5,165 ft","","OR"],
+["Juniper Hills DGC","Madras, OR",3.05,10,9,"2,883 ft","","OR"],
+["The Attraction","Klamath Falls, OR",2.95,0,0,"","","OR"],
+["Wennerberg Park","Carlton, OR",2.75,0,12,"2,400 ft","","OR"],
+["Locks Approach DGC","Cascade Locks, OR",0,0,18,"6,107 ft","Decent","OR"],
+["Oregon State Hospital","Salem, OR",3.2,0,9,"3,027 ft","","OR"],
+["Wheatland DGC","Gervais, OR",3.7,0,18,"6,798 ft","","OR"],
+["Columbia Shore DGC","Hammond, OR",3.8,0,23,"9,000 ft","Perfect","OR"],
+["Mt. Hood Skibowl","Government Camp, OR",2.28,0,18,"6,062 ft","","OR"],
+["Rainier Riverfront Park","Rainier, OR",1.94,0,9,"2,258 ft","Bad","OR"],
+["Dave Heider DGC","Amity, OR",3.61,0,18,"5,000 ft","","OR"],
+["Crest Street Park","Klamath Falls, OR",1.81,0,9,"2,095 ft","","OR"],
+["Eastern Oregon University","La Grande, OR",0,0,10,"5,370 ft","Good","OR"],
+["Singer Creek Park DGC","Oregon City, OR",0.69,0,9,"1,200 ft","","OR"],
+["Oakland DGC","Oakland, OR",3.5,0,9,"2,629 ft","","OR"],
+["L.L. Stub Stewart SP - Lil' Stub","Buxton, OR",3.38,0,9,"1,019 ft","","OR"],
+["Red River DGC","Waldport, OR",3.63,0,18,"3,390 ft","Perfect","OR"],
+["Camp Serene","Noti, OR",3.57,0,18,"5,198 ft","","OR"],
+["MINET DGC","Independence, OR",1.29,0,15,"4,475 ft","","OR"],
+["Stewart Pond","Eugene, OR",0,0,18,"5,299 ft","","OR"],
+["Indian Mary Park","Grants Pass (Merlin), OR",2.58,0,9,"1,869 ft","","OR"],
+["Camp Dakota","Scotts Mills, OR",2.17,0,18,"4,000 ft","","OR"],
+["Philomath Middle School DGC","Philomath, OR",1.33,0,9,"2,100 ft","","OR"],
+["Marys River Park","",0,0,0,"","","OR"],
+["Western Oregon University","Monmouth, OR",1.75,0,9,"3,114 ft","","OR"],
+["Coyotes Den DGC","Redmond, OR",3.58,0,18,"5,480 ft","Good","OR"],
+["Church Park","Sublimity, OR",3.17,0,9,"1,953 ft","","OR"],
+["L.L. Stub Stewart SP - PP","Buxton, OR",0,0,3,"389 ft","Perfect","OR"],
+["Sunriver SHARC DGC","Sunriver, OR",2.75,0,9,"1,185 ft","","OR"],
+["Neskowin Creek RV Resort","Neskowin, OR",2.33,0,18,"3,675 ft","","OR"],
+["Wilder DGC","Newport, OR",4.08,0,19,"5,499 ft","","OR"],
+["Wolf Creek Park","Grants Pass (Wolf Creek), OR",2.0,0,9,"1,488 ft","Bad","OR"],
+["Black Butte Ranch DGC","Black Butte Ranch, OR",2.3,0,9,"3,021 ft","","OR"],
+["Red Hills Run @ Stoller Vineyards","Dayton, OR",1.5,0,0,"","","OR"],
+["Dry Canyon DGC","Redmond, OR",2.9,0,9,"2,774 ft","Perfect","OR"],
+["The Cove","Ashland, OR",2.7,0,18,"5,275 ft","Good","OR"],
+["McNary Dam","Umatilla, OR",3.0,0,18,"5,171 ft","","OR"],
+["Toledo Red Dog DGC","Toledo, OR",3.2,0,9,"1,650 ft","","OR"],
+["Bear Creek DGC","Medford, OR",3.1,0,9,"4,327 ft","","OR"],
+["Tektronix DGC","Beaverton, OR",0,0,9,"2,360 ft","Decent","OR"],
+["Twisted Pine DGC","Newport, OR",0,0,27,"6,198 ft","","OR"],
+["Confluence DGC","Troutdale, OR",1.7,0,7,"2,295 ft","Bad","OR"],
+["Pioneer Park","Stayton, OR",2.75,0,9,"1,490 ft","","OR"],
+["Millsite DGC","Myrtle Creek, OR",3.13,0,9,"3,003 ft","","OR"],
+["Illinois River Forks State Park","Cave Junction, OR",3.38,0,9,"3,470 ft","","OR"],
+["Azalea State Park","Brookings, OR",0,0,18,"","","OR"],
+["SOU DGC","Ashland, OR",2.38,0,9,"2,544 ft","Good","OR"],
+["Rockridge Park DGC","Bend, OR",3.63,0,9,"661 ft","","OR"],
+["Bicentennial Park","Reedsport, OR",2.63,0,0,"","","OR"],
+["Athey Creek Middle School","Tualatin, OR",1.13,0,0,"","Decent","OR"],
+["The Hoot","Yoder, OR",3.5,0,9,"2,880 ft","","OR"],
+["Dairy Creek DGC","Hillsboro, OR",2.5,0,9,"2,179 ft","","OR"],
+["Gold Hill Sports Park DGC","Gold Hill, OR",0.83,0,0,"","","OR"],
+["Vertical Horizons Treehouse Paradise","Cave Junction, OR",1.83,0,10,"","","OR"],
+["Intel (Jones Farm)","",2.33,0,9,"1,778 ft","","OR"],
+["Buffington Park","Gold Beach, OR",3.33,0,18,"4,285 ft","","OR"],
+["Jefferson School District","Jefferson, OR",0,0,12,"","Good","OR"],
+["Pitney DGC","Junction City, OR",0,0,0,"","","OR"],
+["Clearwater Park","Springfield, OR",3.0,0,9,"2,514 ft","","OR"],
+["Bohannon DGC","Tillamook, OR",0,0,18,"4,318 ft","","OR"],
+["Aurora DGC","Aurora, OR",2.5,0,9,"1,867 ft","Perfect","OR"],
+["Kraxberger Middle School","Gladstone, OR",1.83,0,9,"2,431 ft","","OR"],
+["Lil' Oozlefinch Putting Course","Hammond, OR",1.5,0,9,"348 ft","","OR"],
+["Sladden Park","Eugene, OR",1.0,0,3,"","","OR"],
+["McLoughlin Middle School","Medford, OR",0.75,0,0,"","Bad","OR"],
+["Camp Morrow","Wamic, OR",0,0,0,"","","OR"],
+["Camas Valley School DGC","Douglas, OR",0,0,12,"3,035 ft","","OR"],
+["Yankton Community Fellowship DGC","St. Helens, OR",1.75,0,9,"1,596 ft","Unplayable","OR"],
+["McVay Rock State Park","Brookings, OR",2.75,0,9,"3,090 ft","","OR"],
+["Seventh Mountain Resort","Bend, OR",0,0,9,"2,201 ft","Perfect","OR"],
+["Twin Rocks Friends Camp","Rock Away, OR",2.0,0,9,"1,922 ft","","OR"],
+["HP DGC","Corvallis, OR",3.0,0,18,"3,325 ft","","OR"],
+["Garden Lake Park","Creswell, OR",2.25,0,9,"2,355 ft","","OR"],
+["TVCC","Ontario, OR",0,0,13,"","Bad","OR"],
+["Ferry Road Park","North Bend, OR",0,0,0,"","","OR"],
+["Paradise DGC","",3.75,0,18,"5,000 ft","","OR"],
+["Xerox DGC","Wilsonville, OR",0,0,0,"","","OR"],
+["Metzler County Park","Estacada, OR",3.5,0,18,"4,265 ft","Decent","OR"],
+["Lucky Bounce DGC @ Camp Magruder","Rockaway Beach, OR",0,0,18,"4,500 ft","","OR"],
+["Long Glade DGC - Yellow","Canyon City, OR",0,0,18,"7,616 ft","","OR"],
+["Long Glade DGC - Blue","",0,0,18,"7,369 ft","","OR"],
+["Ninth Hole DGC","Monroe (Alpine), OR",3.0,0,0,"","","OR"],
+["Southern Oregon VA","White City, OR",2.0,0,9,"","","OR"],
+["Rimrock Park DGC","Prineville, OR",0.5,0,9,"2,248 ft","","OR"],
+["Glendale City Park","Glendale, OR",0,0,0,"","","OR"],
+["Hermiston Desert","Hermiston, OR",0,0,18,"7,502 ft","Good","OR"],
+["Laurel Hills DGC","Central Point, OR",0,0,9,"5,000 ft","","OR"],
+["Wallowa Lake State Park","Joseph, OR",0,0,9,"2,015 ft","","OR"],
+["Baker DGC","Baker City, OR",0,0,9,"2,741 ft","","OR"],
+["Sunridge Middle School","Pendleton, OR",1.0,0,9,"2,352 ft","","OR"],
+["Porter Boone Park DGC","Aumsville, OR",0,0,4,"978 ft","","OR"],
+["Old Mill DGC","Oakridge, OR",4.0,0,18,"5,226 ft","","OR"],
+["Lincoln Savage Middle School","Grants Pass, OR",1.5,0,0,"","","OR"],
+["Sailboard Beach","Boardman, OR",3.0,0,18,"5,597 ft","Good","OR"],
+["Osprey Park","",0,0,6,"","","OR"],
+["Elgin Community Park","Elgin, OR",0,0,8,"2,285 ft","","OR"],
+["Bard Park","Stanfield, OR",2.5,0,9,"2,399 ft","","OR"],
+["Jasper Park","Pleasant Hill, OR",0,0,0,"","","OR"],
+["Evergreen Christian Center","Hillsboro, OR",0,0,9,"3,059 ft","","OR"],
+["Cascade Academy DGC","Tumalo, OR",0,0,9,"1,747 ft","Perfect","OR"],
+["Scoggins Valley Park","Forest Grove, OR",3.5,0,18,"6,070 ft","","OR"],
+["Port Orford DGC","Port Orford, OR",1.5,0,9,"1,379 ft","Good","OR"],
+["Spirit Mountain Disc Golf","Grand Ronde, OR",0,0,0,"","","OR"],
+["Cascade High School","Turner, OR",0,0,18,"5,326 ft","Decent","OR"],
+["Clackamas Community College Harmony DGC","Milwaukie, OR",1.0,0,4,"653 ft","","OR"],
+["Blodgett Woods","Blodgett, OR",0,0,18,"4,302 ft","","OR"],
+["Stayton Middle School","Stayton, OR",2.0,0,0,"","","OR"],
+["FBC of Medford OR","",0,0,0,"","","OR"],
+["Hubbard's Handful at Jan LaFollette Park","Hubbard, OR",0,0,5,"","","OR"],
+["Odell Lake Resort and Lodge","Crescent, OR",0.5,0,18,"5,199 ft","","OR"],
+["Chemeketa Community College","Salem, OR",4.0,0,18,"5,619 ft","","OR"],
+["Skyline Park DGC","Bend, OR",3.0,0,9,"2,244 ft","Perfect","OR"],
+["Pioneer DGC","Milton-Freewater, OR",0,0,9,"960 ft","","OR"],
+["Blimp Base","Tillamook, OR",4.5,0,18,"5,022 ft","Good","OR"],
+["Tree Top (2023 Redesign)","The Dalles, OR",0,0,18,"5,145 ft","","OR"],
+["South Park","Nyssa, OR",1.0,0,0,"","","OR"],
+["Vale Practice Course","Vale, OR",0.5,0,3,"","","OR"],
+["The Roots DGC","Warren, OR",4.0,0,18,"7,605 ft","","OR"],
+["3 Hole Minimum","Eagle Point, OR",3.5,0,24,"699 ft","","OR"],
+["Riverbend DGC - West","Estacada, OR",0,0,18,"6,856 ft","Perfect","OR"],
+["Soroptimist Fitness Park","Lakeview, OR",0,0,9,"","","OR"],
+["Deschutes Riverside","Sunriver, OR",0,0,5,"100 ft","","OR"],
+["Oak Knoll","Independence, OR",0,0,18,"5,814 ft","","OR"],
+["Malin Park DGC","Malin, OR",0,0,9,"3,283 ft","","OR"],
+["OIT DGC","Klamath Falls, OR",0,0,9,"2,393 ft","","OR"],
+["Pacifica DGC","Williams, OR",0,0,18,"5,446 ft","","OR"],
+["Mountain View DGC","Halfway, OR",0,0,0,"","","OR"],
+["Glendoveer","Portland, OR",0,0,18,"10,522 ft","Decent","OR"],
+["Oregon Dunes DGC","Coos Bay, OR",0,0,18,"6,755 ft","","OR"],
+["Camp Yale","McKenzie Bridge, OR",0,0,9,"3,790 ft","","OR"],
+["Cline Falls","Redmond, OR",0,0,18,"4,833 ft","","OR"],
+["Bevel DGC","Bend, OR",0,0,2,"487 ft","Perfect","OR"],
+["Paulina View","La Pine, OR",0,0,18,"5,171 ft","","OR"],
+["Jack’s Track","Albany, OR",0,0,9,"1,882 ft","Good","OR"],
+["Office Bridge at Portal Park","Westfir, OR",0,0,18,"5,923 ft","","OR"],
+["Linn Benton Community College","",0,0,0,"","","OR"],
+["Confederated Tribes of Grand Ronde","Grand Ronde, OR",0,0,0,"","","OR"],
+["Lowrie Primary","Wilsonville, OR",0,0,19,"","","OR"],
+["Ivor Davies","Molalla, OR",0,0,9,"1,517 ft","","OR"],
+["Linfield University","McMinnville, OR",0,0,9,"2,034 ft","","OR"],
+["Sand Island Marine Park","St. Helens, OR",0,0,9,"2,689 ft","","OR"],
+["Mt Ashland's Siskiyou Crest DGC","Ashland, OR",0,0,18,"1,323 ft","Perfect","OR"],
+["Donald Robertson Park","Troutdale, OR",0,0,0,"","","OR"],
+["Golf Club of Oregon DGC","Albany, OR",0,0,18,"7,574 ft","Good","OR"],
+["Little Luckiamute DGC","Falls City, OR",0,0,9,"1,377 ft","","OR"],
+["Eagle's Nest","Warm Springs, OR",0,0,9,"1,262 ft","Bad","OR"],
+["Warm Springs K-8 Academy","",0,0,9,"2,659 ft","","OR"],
+["Pirates Ledge","Stanfield, OR",0,0,12,"2,879 ft","","OR"],
+["Bear Creek DGC","Cheshire, OR",0,0,18,"4,106 ft","","OR"],
+["Base Camp at Horse Butte","Bend, OR",0,0,18,"6,968 ft","","OR"],
+["Hideaway Springs Homestead","Summerville, OR",0,0,22,"","","OR"],
+["Brush College Park DGC","Salem, OR",0,0,3,"872 ft","","OR"],
+["Presidential Graveyard","Wolf Creek, OR",0,0,0,"","","OR"],
+["Rattlesnake Ridge DGC","John Day, OR",0,0,9,"2,846 ft","","OR"],
+["Vale Practice Course","New Plymouth, OR",0,0,0,"","","OR"],
+["Tigard High School DGC","Tigard, OR",0,0,9,"2,326 ft","","OR"],
+["Sams Valley Elementary School","Central Point, OR",0,0,9,"1,639 ft","Decent","OR"],
+["Blimp Base DGC","Tillamook, OR",0,0,18,"6,618 ft","","OR"],
+["Legion Park","Woodburn, OR",0,0,9,"1,778 ft","","OR"],
+["Taft High School","Lincoln City, OR",0,0,6,"1,305 ft","","OR"],
+["Beacon Of Light DGC","",0,0,9,"2,310 ft","","OR"],
+["Williamette Valley Vineyards DGC","Turner, OR",0,0,9,"2,230 ft","","OR"],
+["Knight Lights","Irrigon, OR",0,0,18,"4,852 ft","","OR"]];
+const WA=[["Leverich Park","Vancouver, WA",3.33,58,13,"3,273 ft","Decent","WA"],
+["NAD Park","Bremerton, WA",3.99,53,18,"3,929 ft","Perfect","WA"],
+["Ralph Williamson Memorial DGC","Seattle, WA",3.72,50,18,"5,536 ft","Good","WA"],
+["Mineral Springs Park","",2.71,46,18,"2,333 ft","","WA"],
+["White River","Auburn, WA",3.74,41,18,"4,497 ft","","WA"],
+["Lake Stevens DGC","Lake Stevens, WA",3.1,0,19,"4,268 ft","","WA"],
+["Shelton Springs DGC","Shelton, WA",4.41,0,20,"7,073 ft","","WA"],
+["Terrace Creek","Mountlake Terrace, WA",3.12,34,18,"5,667 ft","Perfect","WA"],
+["Fort Steilacoom Park - Northwest","Lakewood, WA",3.62,0,18,"4,350 ft","","WA"],
+["Juel Community Park","Redmond, WA",2.22,32,9,"2,742 ft","","WA"],
+["Lake Fenwick","Kent, WA",3.37,0,18,"4,839 ft","Good","WA"],
+["NSRA DGC","Sedro Woolley, WA",3.53,0,0,"","","WA"],
+["Howling Coyote DGC","Bothell, WA",2.98,0,10,"2,079 ft","Decent","WA"],
+["High Bridge Park DGC","Spokane, WA",3.4,30,18,"4,935 ft","","WA"],
+["Cornwall Park","Bellingham, WA",2.5,0,9,"1,916 ft","Perfect","WA"],
+["Riverside DGC","Sumner, WA",2.91,0,18,"6,100 ft","","WA"],
+["Silver Lake Excalibur DGC","Everett, WA",2.76,0,9,"2,228 ft","","WA"],
+["Lucky Mud - Raven","Skamokawa, WA",4.28,0,21,"5,650 ft","","WA"],
+["North Bonneville DGC","North Bonneville, WA",3.58,0,18,"5,532 ft","","WA"],
+["Glenwood Community Church DGC","Vancouver, WA",3.02,0,9,"2,726 ft","","WA"],
+["Columbia Park - River Country DGC","Kennewick, WA",3.69,0,18,"5,221 ft","","WA"],
+["Ferguson Park","Snohomish, WA",1.83,0,9,"1,482 ft","Good","WA"],
+["Camp Sekani Jamboree","Spokane, WA",3.79,0,20,"5,798 ft","","WA"],
+["Seatac DGC","SeaTac, WA",3.81,0,27,"9,820 ft","Perfect","WA"],
+["Tall Firs DGC","Monroe, WA",3.76,23,18,"5,671 ft","","WA"],
+["Kitsap Fairgrounds DGC","Bremerton, WA",3.07,0,18,"4,100 ft","","WA"],
+["Fort Nugent Park DGC","Oak Harbor, WA",3.05,22,18,"4,593 ft","","WA"],
+["Twin Rivers","Arlington, WA",3.02,21,18,"4,925 ft","Good","WA"],
+["Van Zee Park","Port Orchard, WA",2.48,0,9,"1,740 ft","","WA"],
+["Lincoln Park DGC","Port Angeles, WA",3.23,0,18,"4,869 ft","","WA"],
+["GH Hostel DGC","Elma, WA",3.34,19,18,"4,518 ft","","WA"],
+["Fredericksen DGC","Poulsbo, WA",2.79,0,18,"3,037 ft","Perfect","WA"],
+["Bakerview Park","Mount Vernon, WA",1.61,0,9,"1,701 ft","","WA"],
+["Two Rivers Park DGC","Kennewick/Finley, WA",3.69,0,18,"6,132 ft","","WA"],
+["Loutsis Park","Carnation, WA",2.69,0,9,"2,245 ft","","WA"],
+["Fort Walla Walla DGC","Walla Walla, WA",2.8,15,18,"4,782 ft","","WA"],
+["Blue Heron Park","Moses Lake, WA",0,0,9,"2,720 ft","Good","WA"],
+["VanderYacht Park","Ferndale, WA",2.14,0,9,"2,552 ft","","WA"],
+["WSU-Vancouver","Vancouver, WA",0.77,0,9,"2,200 ft","","WA"],
+["Sunnyside Park","Pullman, WA",2.96,0,18,"4,813 ft","Perfect","WA"],
+["Woodland Creek Community Park","Lacey, WA",3.0,0,14,"4,299 ft","","WA"],
+["Gaffney's Grove DGC","Maple Valley, WA",3.5,0,18,"4,000 ft","","WA"],
+["Rainshadow DGC","Sequim, WA",4.31,0,18,"4,812 ft","","WA"],
+["HJ Carroll Park","Chimacum, WA",2.21,0,9,"2,261 ft","","WA"],
+["St. Martin's Abbey","",2.17,0,9,"2,943 ft","Good","WA"],
+["Crystal Mountain - Base Course","Crystal Mountain, WA",3.41,0,18,"6,905 ft","","WA"],
+["Roche Harbor DGC","Friday Harbor, WA",3.68,0,0,"","Perfect","WA"],
+["Crystal Mountain - Summit Course","",3.36,0,0,"","","WA"],
+["Hanson Ponds DGC","Cle Elum, WA",2.73,0,18,"4,887 ft","","WA"],
+["Roy Morse DGC","Longview, WA",2.86,0,9,"2,347 ft","","WA"],
+["East Tacoma DGC","Tacoma, WA",1.9,0,9,"2,510 ft","Unplayable","WA"],
+["Evergreen DGC","Olympia, WA",3.6,0,18,"5,615 ft","","WA"],
+["Sam Benn DGC","Aberdeen, WA",2.39,0,9,"2,409 ft","","WA"],
+["Greenacres Park","Spokane Valley, WA",2.28,0,1,"","Bad","WA"],
+["Wide Hollow DGC","Yakima, WA",3.0,0,9,"2,658 ft","","WA"],
+["Tam O'shanter Park","Kelso, WA",1.61,0,9,"2,229 ft","","WA"],
+["Wenatchee Rotary Park","Wenatchee, WA",1.94,0,9,"1,991 ft","Perfect","WA"],
+["Stimpi Ridge","Spokane, WA",2.56,0,0,"","","WA"],
+["Twin Cedars DGC","Castle Rock, WA",1.69,0,9,"1,559 ft","","WA"],
+["Dykstra Park","Grandview, WA",0,0,18,"6,100 ft","","WA"],
+["Rotary Park DGC","Anacortes, WA",2.63,0,9,"1,875 ft","","WA"],
+["Thousand Trails Leavenworth","Leavenworth, WA",1.71,0,9,"2,500 ft","Bad","WA"],
+["Volunteer Park","Lakebay, WA",1.93,0,9,"2,336 ft","Good","WA"],
+["Glacier DGC - Front 18","Glacier, WA",3.07,0,0,"","","WA"],
+["Paradise Point DGC","La Center, WA",2.71,0,9,"2,229 ft","Decent","WA"],
+["South Fork DGC","North Bend, WA",3.79,0,18,"5,715 ft","Perfect","WA"],
+["Skamania Lodge","Stevenson, WA",0,0,0,"","","WA"],
+["Tedford Park","East Wenatchee, WA",0,0,9,"2,427 ft","","WA"],
+["James Lawless Park","Richland, WA",3.42,0,18,"4,702 ft","","WA"],
+["Stevens Pass DGC","Skykomish, WA",2.92,0,0,"","","WA"],
+["Ellensburg DGC","Ellensburg, WA",0,0,9,"1,938 ft","","WA"],
+["Mossy Roc DGC","Bellingham, WA",3.83,0,0,"","","WA"],
+["Cushman Cruise DGC","Hoodsport, WA",3.67,0,9,"2,045 ft","Good","WA"],
+["Kayak Point - Gold","Stanwood, WA",4.25,0,0,"","Perfect","WA"],
+["Pavilion Park","Liberty Lake, WA",0.5,0,6,"","","WA"],
+["Jenda Jones Memorial DGC","College Place, WA",1.3,0,18,"4,177 ft","","WA"],
+["Whitworth Back 40","Spokane, WA",2.9,0,9,"2,688 ft","","WA"],
+["Farmers Park","Enumclaw, WA",2.5,0,18,"5,258 ft","","WA"],
+["EJ Roberts DGC","North Bend, WA",2.4,0,4,"565 ft","","WA"],
+["Lincoln Park","Blaine, WA",0,0,18,"4,805 ft","Decent","WA"],
+["Liberty Park DGC","",2.3,0,19,"","Good","WA"],
+["Edgewater DGC","Mount Vernon, WA",2.2,0,18,"6,509 ft","","WA"],
+["Miller Park","Fairchild Air Force Base, WA",1.75,0,9,"2,380 ft","","WA"],
+["Seward Park","Seattle, WA",3.5,0,15,"4,736 ft","","WA"],
+["Glacier DGC - Back 18","Glacier, WA",2.63,0,0,"","","WA"],
+["Greenwater DGC","Greenwater, WA",2.0,0,0,"","","WA"],
+["Valley View Middle School DGC","Snohomish, WA",0.38,0,0,"","","WA"],
+["North Spokane YMCA","Spokane, WA",2.25,0,9,"1,322 ft","Good","WA"],
+["Gateway Guardians DGC","Everett, WA",1.13,0,0,"","","WA"],
+["Abrams Park","Ridgefield, WA",3.0,0,9,"1,901 ft","","WA"],
+["PLU DGC","Tacoma, WA",2.5,0,9,"2,628 ft","","WA"],
+["Battle Point DGC","Bainbridge Island, WA",2.75,0,9,"3,675 ft","Perfect","WA"],
+["Dawson Park","Cle Elum, WA",0,0,18,"3,697 ft","","WA"],
+["PUD Prairie","Shelton, WA",3.88,0,18,"5,865 ft","","WA"],
+["Gold Park","Lynnwood, WA",2.88,0,9,"1,378 ft","","WA"],
+["Pioneer Park","Connell, WA",1.5,0,0,"","","WA"],
+["McChord Field DGC","",1.17,0,9,"2,105 ft","","WA"],
+["Lower Peninsula Park","Moses Lake, WA",2.0,0,9,"2,660 ft","","WA"],
+["Big Cross DGC","Pasco, WA",2.83,0,18,"6,301 ft","Decent","WA"],
+["Lucky Mud - Woodpecker","Skamokawa, WA",2.67,0,10,"","","WA"],
+["Rocky Ridge DGC","Spokane, WA",4.0,0,18,"5,233 ft","Good","WA"],
+["Whitmarsh DGC","Burlington, WA",0,0,18,"4,755 ft","","WA"],
+["Peye Creek","Chewelah, WA",1.67,0,9,"1,342 ft","Bad","WA"],
+["Eagle Ridge","",2.5,0,7,"","","WA"],
+["Kayak Point - Red","Stanwood, WA",3.83,0,18,"8,053 ft","","WA"],
+["Haglein Jr. DGC","Cheney, WA",0.83,0,3,"300 ft","Perfect","WA"],
+["Friendship Park Jr. DGC","",1.17,0,3,"401 ft","","WA"],
+["Mossyrock Park - West","Mossyrock, WA",2.83,0,9,"1,662 ft","","WA"],
+["Medical Lake Junior DGC","Medical Lake, WA",2.67,0,9,"1,486 ft","Decent","WA"],
+["Woodland Park","Seattle, WA",4.0,0,18,"6,483 ft","","WA"],
+["Newport/Little Diamond Lake KOA","Newport, WA",0.75,0,0,"","","WA"],
+["Sunrise Bay DGC","Loon Lake, WA",1.5,0,18,"4,215 ft","Unplayable","WA"],
+["Yacolt Recreational Park","Yacolt, WA",1.75,0,8,"2,025 ft","","WA"],
+["Castle Rock DGC","Castle Rock, WA",0,0,9,"1,775 ft","","WA"],
+["Klickitat Park DGC","Goldendale, WA",2.5,0,9,"3,216 ft","","WA"],
+["Dayton DGC","Dayton, WA",0,0,9,"2,242 ft","","WA"],
+["Fullbright Park","Union Gap, WA",2.25,0,18,"5,782 ft","","WA"],
+["Golf Tri-Plex","Kennewick, WA",3.25,0,18,"6,383 ft","","WA"],
+["Salnave Jr DGC","Cheney, WA",2.0,0,5,"625 ft","Good","WA"],
+["Church Creek","Stanwood, WA",2.75,0,18,"3,942 ft","Unplayable","WA"],
+["Kayak Point - Original","",0,0,0,"","","WA"],
+["Springer Park","Shelton, WA",1.75,0,9,"2,300 ft","Decent","WA"],
+["Delphi Disc Golf","Olympia, WA",0,0,18,"6,565 ft","","WA"],
+["Loma Vista Jr. DGC","Spokane, WA",1.5,0,4,"617 ft","","WA"],
+["Cliff Park Junior DGC","",0,0,3,"279 ft","","WA"],
+["Ben Burr Jr. DGC","",0,0,3,"570 ft","","WA"],
+["Hays Park Jr. DGC","",0,0,3,"646 ft","Good","WA"],
+["Chase ‘n Chains","",0.75,0,9,"3,594 ft","","WA"],
+["Double K Retreat & Adventure Center","Easton, WA",2.75,0,18,"5,783 ft","","WA"],
+["Davenport Sports Complex","Davenport, WA",0,0,9,"2,766 ft","Decent","WA"],
+["Tidewater DGC","Ocean Shores, WA",2.5,0,9,"1,496 ft","","WA"],
+["Cougar Crossing","",2.25,0,9,"1,441 ft","","WA"],
+["Woodbridge Jr. DGC","Spokane, WA",0,0,4,"","Perfect","WA"],
+["Hartwood DiscGolfPark","Washougal, WA",3.25,0,9,"1,815 ft","","WA"],
+["Rotary Riverside Park","Centralia, WA",1.25,0,9,"1,934 ft","","WA"],
+["Hockinson Meadows","Hockinson, WA",0,0,18,"7,083 ft","","WA"],
+["Whitewater DGC","",3.5,0,18,"4,937 ft","","WA"],
+["Cornwall Classic Layout","Bellingham, WA",3.0,0,20,"","","WA"],
+["Grand Coulee DGC","Grand Coulee, WA",2.5,0,9,"2,422 ft","Decent","WA"],
+["Bear Creek DGC","Winthrop, WA",1.5,0,0,"","Unplayable","WA"],
+["Columbia Sun RV Resort","Kennewick, WA",0,0,5,"","","WA"],
+["NAD Park - DISCovery","Bremerton, WA",2.0,0,6,"637 ft","Perfect","WA"],
+["Brooks Memorial State Park","Goldendale, WA",1.0,0,0,"","","WA"],
+["Scott Lake Golf Course","Olympia, WA",0,0,18,"7,238 ft","","WA"],
+["Yelm Prairie DGC","Yelm, WA",0,0,9,"2,690 ft","","WA"],
+["Fircrest Rec. Center DGC","Fircrest, WA",0,0,9,"1,500 ft","","WA"],
+["Cowlitz Falls DGC","Randle, WA",0,0,9,"2,910 ft","Good","WA"],
+["Volunteer Park DGC","Selah, WA",2.5,0,9,"1,299 ft","","WA"],
+["Dark Park","Darrington, WA",0,0,9,"1,909 ft","","WA"],
+["Warm Beach Camp DGC","Stanwood, WA",0,0,9,"1,200 ft","","WA"],
+["Bay View School DGC","Burlington, WA",1.0,0,4,"","","WA"],
+["Mossyrock Park - East","Mossyrock, WA",0,0,9,"2,185 ft","","WA"],
+["Lincoln Park","Wenatchee, WA",0,0,9,"2,471 ft","","WA"],
+["Teanaway Camp","Cle Elum, WA",0,0,0,"","","WA"],
+["Cedar Stump Woods","Sedro-Woolley, WA",3.5,0,21,"85 ft","","WA"],
+["Kiwanis Park","Battle Ground, WA",0,0,10,"","","WA"],
+["Bellis Fairways DGC","Bellingham, WA",0,0,18,"4,995 ft","Good","WA"],
+["Skagit Adventist Academy","",2.0,0,9,"2,126 ft","","WA"],
+["Chief Kitsap Academy","Poulsbo, WA",1.0,0,9,"1,984 ft","Bad","WA"],
+["Pend Oreille County Park DGC","Pocahontas Bay, WA",1.5,0,0,"","","WA"],
+["Waterbrook","Walla Walla, WA",0,0,9,"1,997 ft","","WA"],
+["Benton City DGC","Benton City, WA",3.0,0,18,"4,351 ft","Perfect","WA"],
+["Cascade Disc Golf","North Bend, WA",0,0,6,"901 ft","","WA"],
+["Jackson Park","Seattle, WA",3.5,0,9,"3,015 ft","Good","WA"],
+["Burton Adventure Recreation Center","Vashon, WA",0,0,12,"2,767 ft","","WA"],
+["Ellensburg High School","Ellensburg, WA",0,0,9,"2,357 ft","","WA"],
+["Riproar DGC at The Oasis","St John, WA",0,0,18,"3,344 ft","","WA"],
+["Skyline DGC","Cathlamet, WA",0,0,18,"7,762 ft","","WA"],
+["Forks DGC","Forks, WA",0,0,3,"1,129 ft","","WA"],
+["Deception Pass Golf Center","Oak Harbor, WA",0,0,9,"2,216 ft","Perfect","WA"],
+["Steve’s Hole","Vancouver, WA",0,0,9,"3,328 ft","","WA"],
+["Lake Padden DGC","Bellingham, WA",0,0,18,"7,123 ft","Good","WA"],
+["Bellingham Technical College","",0,0,5,"","","WA"],
+["Maryhill State Park Disc Golf","Goldendale, WA",0,0,9,"4,455 ft","","WA"],
+["Fort Steilacoom Rhododendron Course","Lakewood, WA",0,0,18,"6,768 ft","","WA"],
+["Cowlitz Riverside Park","Kelso, WA",0,0,9,"2,605 ft","","WA"],
+["Long Beach Dunes DGC","Long Beach, WA",0,0,10,"3,282 ft","","WA"],
+["Peninsula DGC","",0,0,18,"5,954 ft","","WA"],
+["Westport Winery DGC","Aberdeen, WA",0,0,9,"1,039 ft","","WA"],
+["CWU DGC","Ellensburg, WA",0,0,9,"2,607 ft","","WA"],
+["Broadfield DGC","Tumwater, WA",0,0,9,"3,128 ft","","WA"],
+["Oak Harbor High School DGC","Oak Harbor, WA",0,0,9,"2,881 ft","","WA"],
+["Kueck Park Disc Golf","Gig Harbor, WA",0,0,9,"2,831 ft","","WA"],
+["Gleneagle Golf Course","Arlington, WA",0,0,18,"7,981 ft","","WA"],
+["Kayak Point - Blue","Stanwood, WA",0,0,18,"6,759 ft","","WA"],
+["Liberty High School DGC","Winthrop, WA",0,0,9,"2,375 ft","","WA"],
+["South Whidbey Safari Course","Langley, WA",0,0,4,"","Good","WA"],
+["Pacific City Park","Pacific, WA",0,0,9,"2,676 ft","","WA"],
+["Summit Park/Tahoma High School DGC","Maple Valley, WA",0,0,9,"1,302 ft","","WA"],
+["Antler Grove DGC","Deer Park, WA",0,0,18,"5,599 ft","Perfect","WA"],
+["Camas Prairie Disc Golf","Port Townsend, WA",0,0,18,"7,294 ft","","WA"],
+["SPIE DGC","Bellingham, WA",0,0,9,"1,594 ft","","WA"],
+["Narrow Fairways","Blaine, WA",0,0,9,"1,504 ft","","WA"],
+["Grizzly Ridge","Hoquiam, WA",0,0,9,"1,750 ft","","WA"],
+["Antler Grove - Pitch and Putt","",0,0,18,"2,005 ft","Good","WA"],
+["Eastpark Church DGC","Vancouver, WA",0,0,9,"1,472 ft","","WA"],
+["Island Baptist Church","Camano, WA",0,0,3,"","","WA"],
+["Marvin Garden","Anacortes, WA",0,0,18,"6,152 ft","","WA"],
+["Flying Saucer DGC","Concrete, WA",0,0,9,"2,087 ft","","WA"],
+["Sage Scramble","Tonasket, WA",0,0,9,"3,118 ft","","WA"],
+["Little Ripper at the Oasis","Saint John, WA",0,0,9,"893 ft","","WA"]];
+
+    (function () {
+      'use strict';
+      const courses = OR.concat(WA).map(function (row, index) {
+        return { name: row[0], city: row[1], rating: row[2], reviews: row[3], holes: row[4], length: row[5], condition: row[6], state: row[7], index: index };
+      });
+      const els = {
+        search: document.getElementById('search'), state: document.getElementById('state'), holes: document.getElementById('holes'),
+        rating: document.getElementById('rating'), sort: document.getElementById('sort'), reset: document.getElementById('reset'),
+        grid: document.getElementById('grid'), results: document.getElementById('results'), stats: document.getElementById('stats')
+      };
+      const collator = new Intl.Collator('en', { sensitivity: 'base' });
+
+      function addStat(number, label) {
+        const li = document.createElement('li'); li.className = 'stat';
+        const strong = document.createElement('strong'); strong.textContent = String(number) + ' ';
+        li.append(strong, document.createTextNode(label)); els.stats.appendChild(li);
+      }
+      addStat(OR.length, 'Oregon'); addStat(WA.length, 'Washington');
+
+      function text(tag, value, className) {
+        const node = document.createElement(tag); if (className) node.className = className; node.textContent = value; return node;
+      }
+      function makeCard(course) {
+        const card = document.createElement('article'); card.className = 'card' + (course.rating >= 4.5 ? ' top' : '');
+        if (course.rating >= 4.5) card.appendChild(text('span', 'Top rated', 'ribbon'));
+        card.appendChild(text('h3', course.name));
+
+        const location = document.createElement('div'); location.className = 'location';
+        location.appendChild(text('span', course.city || 'Location not listed', 'location-text'));
+        location.appendChild(text('span', course.state, 'state'));
+        card.appendChild(location);
+
+        const rating = document.createElement('p'); rating.className = 'rating';
+        if (course.rating > 0) {
+          rating.appendChild(text('span', '★', 'star'));
+          rating.appendChild(document.createTextNode(' ' + course.rating.toFixed(2) + ' '));
+          rating.appendChild(text('span', '(' + course.reviews + ' ' + (course.reviews === 1 ? 'review' : 'reviews') + ')', 'reviews'));
+        } else {
+          rating.appendChild(text('span', 'Not yet rated', 'unrated'));
+        }
+        card.appendChild(rating);
+
+        const metaParts = [];
+        if (course.holes > 0) metaParts.push(course.holes + ' ' + (course.holes === 1 ? 'hole' : 'holes'));
+        if (course.length) metaParts.push(course.length);
+        if (metaParts.length) card.appendChild(text('p', metaParts.join(' · '), 'meta'));
+
+        const foot = document.createElement('div'); foot.className = 'card-foot';
+        if (course.condition) foot.appendChild(text('span', course.condition, 'condition ' + course.condition.toLowerCase()));
+        const link = document.createElement('a'); link.className = 'dgcr'; link.target = '_blank'; link.rel = 'noopener';
+        link.href = 'https://www.google.com/search?q=' + encodeURIComponent('site:dgcoursereview.com/courses "' + course.name + '"' + (course.city ? ' "' + course.city + '"' : ''));
+        link.textContent = 'Reviews on DGCR ↗'; link.setAttribute('aria-label', 'Read reviews for ' + course.name + ' on DGCR');
+        foot.appendChild(link); card.appendChild(foot);
+        return card;
+      }
+
+      function currentCourses() {
+        const query = els.search.value.trim().toLocaleLowerCase();
+        const state = els.state.value; const holes = els.holes.value; const minRating = Number(els.rating.value);
+        const filtered = courses.filter(function (course) {
+          if (query && !(course.name + ' ' + course.city).toLocaleLowerCase().includes(query)) return false;
+          if (state && course.state !== state) return false;
+          if (holes === '9' && course.holes !== 9) return false;
+          if (holes === '18' && course.holes !== 18) return false;
+          if (holes === '21' && course.holes < 21) return false;
+          if (minRating && course.rating < minRating) return false;
+          return true;
+        });
+        const sort = els.sort.value;
+        filtered.sort(function (a, b) {
+          if (sort === 'rating') return (b.rating - a.rating) || (b.reviews - a.reviews) || collator.compare(a.name, b.name);
+          if (sort === 'holes') return (b.holes - a.holes) || (b.rating - a.rating) || collator.compare(a.name, b.name);
+          if (sort === 'name') return collator.compare(a.name, b.name) || (a.index - b.index);
+          return (b.reviews - a.reviews) || (b.rating - a.rating) || collator.compare(a.name, b.name);
+        });
+        return filtered;
+      }
+
+      function render() {
+        const filtered = currentCourses();
+        els.results.replaceChildren(document.createTextNode('Showing '), text('strong', String(filtered.length)), document.createTextNode(' of ' + courses.length + ' courses'));
+        if (!filtered.length) {
+          const empty = document.createElement('div'); empty.className = 'empty';
+          empty.appendChild(text('p', 'No courses match those filters.'));
+          const clear = text('button', 'Clear filters'); clear.type = 'button'; clear.addEventListener('click', reset); empty.appendChild(clear);
+          els.grid.replaceChildren(empty); return;
+        }
+        const fragment = document.createDocumentFragment(); filtered.forEach(function (course) { fragment.appendChild(makeCard(course)); });
+        els.grid.replaceChildren(fragment);
+      }
+      function reset() {
+        els.search.value = ''; els.state.value = ''; els.holes.value = ''; els.rating.value = '0'; els.sort.value = 'reviews'; render(); els.search.focus();
+      }
+      let searchTimer;
+      els.search.addEventListener('input', function () { clearTimeout(searchTimer); searchTimer = setTimeout(render, 180); });
+      [els.state, els.holes, els.rating, els.sort].forEach(function (el) { el.addEventListener('change', render); });
+      els.reset.addEventListener('click', reset);
+      render();
+    }());
+  </script>
+</body>
+</html>
